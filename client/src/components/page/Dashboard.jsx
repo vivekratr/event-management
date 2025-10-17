@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useStore } from '@/hooks/useStore';
 import { TIMEZONES } from '@/lib/constants';
 import { formatDateTime } from '@/utils/timezoneUtils';
-import { valiDate} from '@/utils/validation';
+import { valiDate } from '@/utils/validation';
 import { getUsernameById } from '@/utils/userUtils';
 import DateTimeInput from '@/components/common/DateTimeInput';
 import ProfileMultiSelect from '@/components/event/ProfileMultiSelect';
@@ -72,7 +72,7 @@ export default function EventDashboard() {
 
     useEffect(() => {
         if (currentUser) fetchEvents(currentUser);
-       
+
     }, [currentUser]);
 
     const handleCreateProfile = async () => {
@@ -125,7 +125,7 @@ export default function EventDashboard() {
             setShowCreateEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
-            toast('Unauthorized Action',"Only Admin can create users")
+            toast('Unauthorized Action', "Only Admin can create users")
             setFormError(error.message || 'Failed to create event');
         }
     };
@@ -261,7 +261,7 @@ export default function EventDashboard() {
                                 profiles={profiles}
                             />
 
-                            {profiles.find((obj)=>obj.role === 'admin')._id === currentUser &&  <Dialog open={showCreateProfile} onOpenChange={setShowCreateProfile}>
+                            {profiles?.find((obj) => obj?.role === 'admin')?._id === currentUser && <Dialog open={showCreateProfile} onOpenChange={setShowCreateProfile}>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" size="sm" className="w-full">
                                         <Plus className="mr-2 h-4 w-4" /> New Profile
@@ -326,8 +326,8 @@ export default function EventDashboard() {
                                 </Alert>
                             )}
 
-                            <Button 
-                                onClick={openCreateEventDialog} 
+                            <Button
+                                onClick={openCreateEventDialog}
                                 className="w-full"
                             >
                                 <Plus className="mr-2 h-4 w-4" /> Create New Event
@@ -383,12 +383,12 @@ export default function EventDashboard() {
                 </div>
 
                 {/* Create Event dialog */}
-                <Dialog  open={showCreateEvent} onOpenChange={setShowCreateEvent}>
+                <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Event</DialogTitle>
                         </DialogHeader>
-                        <EventForm 
+                        <EventForm
                             formData={createEventForm}
                             setFormData={setCreateEventForm}
                             profiles={profiles}
@@ -411,7 +411,7 @@ export default function EventDashboard() {
                         <DialogHeader>
                             <DialogTitle>Edit Event</DialogTitle>
                         </DialogHeader>
-                        <EventForm 
+                        <EventForm
                             formData={editEventForm}
                             setFormData={setEditEventForm}
                             profiles={profiles}
