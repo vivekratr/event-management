@@ -66,11 +66,11 @@ export default function EventDashboard() {
         if (!newProfileName.trim()) return;
         try {
             await createProfile(newProfileName, currentUser);
-            toast({ title: 'Profile Created', description: `New profile: ${newProfileName}` });
+            toast.success(`New profile: ${newProfileName}`);
             setNewProfileName('');
             setShowCreateProfile(false);
         } catch (error) {
-            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+            toast.error(error.message);
         }
     };
 
@@ -83,7 +83,7 @@ export default function EventDashboard() {
             createdBy: currentUser,
         };
 
-        const validationError = valiDatee(eventForm);
+        const validationError = valiDate(eventForm);
         if (validationError) {
             setFormError(validationError);
             return;
@@ -91,7 +91,7 @@ export default function EventDashboard() {
 
         try {
             await createEvent(payload);
-            toast({ title: 'Event Created', description: 'Your event has been added successfully.' });
+            toast.success('Your event has been added successfully.');
             setEventForm({
                 profiles: [],
                 timezone: 'America/New_York',
@@ -124,7 +124,7 @@ export default function EventDashboard() {
 
         try {
             await updateEvent(selectedEvent._id, payload);
-            toast({ title: 'Event Updated', description: 'Changes saved successfully.' });
+            toast.success('Changes saved successfully.');
             setShowEditEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
@@ -133,19 +133,43 @@ export default function EventDashboard() {
     };
 
     const openEditDialog = (event) => {
-        const startDate = new Date(event.start);
-        const endDate = new Date(event.end);
-        setSelectedEvent(event);
-        setEventForm({
-            profiles: event.profiles || [],
-            timezone: event.timezone || 'America/New_York',
-            startDate: startDate.toISOString().split('T')[0],
-            startTime: startDate.toTimeString().slice(0, 5),
-            endDate: endDate.toISOString().split('T')[0],
-            endTime: endDate.toTimeString().slice(0, 5),
-        });
-        setFormError('');
-        setShowEditEvent(true);
+        try {
+            const parseDate = (dateString) => {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    throw new Error('Invalid date format');
+                }
+                return date;
+            };
+
+            const startDate = event.start ? parseDate(event.start) : new Date();
+            const endDate = event.end ? parseDate(event.end) : new Date();
+            
+            const formatDate = (date) => {
+                const pad = (num) => num.toString().padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+            };
+
+            const formatTime = (date) => {
+                const pad = (num) => num.toString().padStart(2, '0');
+                return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            };
+
+            setSelectedEvent(event);
+            setEventForm({
+                profiles: event.profiles || [],
+                timezone: event.timezone || 'America/New_York',
+                startDate: formatDate(startDate),
+                startTime: formatTime(startDate),
+                endDate: formatDate(endDate),
+                endTime: formatTime(endDate),
+            });
+            setFormError('');
+            setShowEditEvent(true);
+        } catch (error) {
+            console.error('Error parsing event dates:', error);
+            toast.error('Error loading event data. Please try again.');
+        }
     };
 
     const userEvents = events.filter((e) => e.profiles?.includes(currentUser));
@@ -153,7 +177,6 @@ export default function EventDashboard() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Event Management</h1>
@@ -181,7 +204,6 @@ export default function EventDashboard() {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left: Create Event */}
                     <Card className="shadow-lg">
                         <CardHeader>
                             <CardTitle>Create Event</CardTitle>
@@ -264,7 +286,6 @@ export default function EventDashboard() {
                         </CardContent>
                     </Card>
 
-                    {/* Right: Event List */}
                     <Card className="shadow-lg">
                         <CardHeader>
                             <CardTitle>Events</CardTitle>
@@ -312,7 +333,6 @@ export default function EventDashboard() {
                     </Card>
                 </div>
 
-                {/* Edit Event Dialog */}
                 <Dialog open={showEditEvent} onOpenChange={setShowEditEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
