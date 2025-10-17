@@ -3,9 +3,12 @@
   "module": "src/index.js",
   "type": "module",
   "private": true,
+  "main": "src/server.js",
   "scripts": {
     "start": "bun src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+     "build": "echo 'No build step required'",
+    "vercel-build": "echo 'Vercel build step'"
   },
   "devDependencies": {
     "@types/bun": "latest",
