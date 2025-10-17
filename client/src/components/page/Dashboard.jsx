@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Plus } from 'lucide-react';
+import { Calendar, Clock, Edit, FileText, Plus, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
+
 import { useStore } from '@/hooks/useStore';
 import { TIMEZONES } from '@/lib/constants';
-import { valiDate } from '@/utils/validation';
+import { formatDateTime } from '@/utils/timezoneUtils';
+import { valiDate} from '@/utils/validation';
+import { getUsernameById } from '@/utils/userUtils';
 import DateTimeInput from '@/components/common/DateTimeInput';
 import ProfileMultiSelect from '@/components/event/ProfileMultiSelect';
 import EventCard from '@/components/event/EventCard';
@@ -38,6 +41,7 @@ export default function EventDashboard() {
     const [showCreateEvent, setShowCreateEvent] = useState(false);
     const [showEditEvent, setShowEditEvent] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
+
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [newProfileName, setNewProfileName] = useState('');
 
@@ -54,12 +58,13 @@ export default function EventDashboard() {
         profiles: [],
         timezone: 'America/New_York',
         startDate: '',
-        startTime: '09:00',
+        startTime: '',
         endDate: '',
-        endTime: '10:00',
+        endTime: '',
     });
 
     const [formError, setFormError] = useState('');
+    const [eventLogs, setEventLogs] = useState([]);
 
     useEffect(() => {
         fetchProfiles();
@@ -67,7 +72,7 @@ export default function EventDashboard() {
 
     useEffect(() => {
         if (currentUser) fetchEvents(currentUser);
-
+       
     }, [currentUser]);
 
     const handleCreateProfile = async () => {
@@ -120,7 +125,7 @@ export default function EventDashboard() {
             setShowCreateEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
-            toast('Unauthorized Action', "Only Admin can create users")
+            toast('Unauthorized Action',"Only Admin can create users")
             setFormError(error.message || 'Failed to create event');
         }
     };
@@ -142,6 +147,7 @@ export default function EventDashboard() {
         };
 
         const payload = {
+            requesterId:currentUser,
             profiles: editEventForm.profiles,
             timezone: editEventForm.timezone,
             start: createISODate(editEventForm.startDate, editEventForm.startTime),
@@ -156,6 +162,9 @@ export default function EventDashboard() {
             setShowEditEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
+            console.log('====================================');
+            console.log(error);
+            console.log('====================================');
             setFormError(error.message || 'Failed to update event');
         }
     };
@@ -176,25 +185,19 @@ export default function EventDashboard() {
     const openEditDialog = (event) => {
         try {
             const parseDate = (dateString) => {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                    throw new Error('Invalid date format');
-                }
+                if (!dateString) return new Date();
+                const normalized = dateString.replace(' ', 'T');
+                const date = new Date(normalized);
+                if (isNaN(date.getTime())) throw new Error('Invalid date format');
                 return date;
             };
 
-            const startDate = event.start ? parseDate(event.start) : new Date();
-            const endDate = event.end ? parseDate(event.end) : new Date();
+            const startDate = parseDate(event.startUTC);
+            const endDate = parseDate(event.endUTC);
 
-            const formatDate = (date) => {
-                const pad = (num) => num.toString().padStart(2, '0');
-                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-            };
-
-            const formatTime = (date) => {
-                const pad = (num) => num.toString().padStart(2, '0');
-                return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-            };
+            const pad = (num) => num.toString().padStart(2, '0');
+            const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+            const formatTime = (date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
             setSelectedEvent(event);
             setEditEventForm({
@@ -205,6 +208,7 @@ export default function EventDashboard() {
                 endDate: formatDate(endDate),
                 endTime: formatTime(endDate),
             });
+
             setFormError('');
             setShowEditEvent(true);
         } catch (error) {
@@ -212,6 +216,7 @@ export default function EventDashboard() {
             toast.error('Error loading event data. Please try again.');
         }
     };
+      
 
     const userEvents = events.filter((e) => e.profiles?.includes(currentUser));
 
@@ -256,7 +261,7 @@ export default function EventDashboard() {
                                 profiles={profiles}
                             />
 
-                            {profiles?.find((obj) => obj?.role === 'admin')?._id === currentUser && <Dialog open={showCreateProfile} onOpenChange={setShowCreateProfile}>
+                            {profiles.find((obj)=>obj?.role === 'admin')?._id === currentUser &&  <Dialog open={showCreateProfile} onOpenChange={setShowCreateProfile}>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" size="sm" className="w-full">
                                         <Plus className="mr-2 h-4 w-4" /> New Profile
@@ -321,8 +326,8 @@ export default function EventDashboard() {
                                 </Alert>
                             )}
 
-                            <Button
-                                onClick={openCreateEventDialog}
+                            <Button 
+                                onClick={openCreateEventDialog} 
                                 className="w-full"
                             >
                                 <Plus className="mr-2 h-4 w-4" /> Create New Event
@@ -378,12 +383,12 @@ export default function EventDashboard() {
                 </div>
 
                 {/* Create Event dialog */}
-                <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
+                <Dialog  open={showCreateEvent} onOpenChange={setShowCreateEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Event</DialogTitle>
                         </DialogHeader>
-                        <EventForm
+                        <EventForm 
                             formData={createEventForm}
                             setFormData={setCreateEventForm}
                             profiles={profiles}
@@ -406,7 +411,7 @@ export default function EventDashboard() {
                         <DialogHeader>
                             <DialogTitle>Edit Event</DialogTitle>
                         </DialogHeader>
-                        <EventForm
+                        <EventForm 
                             formData={editEventForm}
                             setFormData={setEditEventForm}
                             profiles={profiles}

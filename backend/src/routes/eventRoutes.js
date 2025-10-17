@@ -86,7 +86,7 @@ router.patch("/:id", async (req, res) => {
             if (startUTC >= event.endUTC) {
                 return res.status(400).json({ error: "Start time must be before current end time" });
             }
-            changes.start = { oldValue: event.startUTC, newValue: startUTC };
+            changes.startDateTime = { oldValue: event.startUTC, newValue: startUTC };
             event.startUTC = startUTC;
         }
 
@@ -96,7 +96,7 @@ router.patch("/:id", async (req, res) => {
             if (endUTC <= event.startUTC) {
                 return res.status(400).json({ error: "End time must be after current start time" });
             }
-            changes.end = { oldValue: event.endUTC, newValue: endUTC };
+            changes.endDateTime = { oldValue: event.endUTC, newValue: endUTC };
             event.endUTC = endUTC;
         }
 
@@ -107,8 +107,8 @@ router.patch("/:id", async (req, res) => {
             if (endUTC <= startUTC) {
                 return res.status(400).json({ error: "End time must be after start time" });
             }
-            changes.start = { oldValue: event.startUTC, newValue: startUTC };
-            changes.end = { oldValue: event.endUTC, newValue: endUTC };
+            changes.startDateTime = { oldValue: event.startUTC, newValue: startUTC };
+            changes.endDateTime = { oldValue: event.endUTC, newValue: endUTC };
             event.startUTC = startUTC;
             event.endUTC = endUTC;
         }

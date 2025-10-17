@@ -8,16 +8,16 @@ import { getUsernameById } from '@/utils/userUtils';
 import LogsDialog from './LogsDialog';
 
 export default function EventCard({ event, profiles, viewTimezone, onEdit }) {
-    console.log('Event data:', event);
-    console.log('View timezone:', viewTimezone);
+    // console.log('Event data:', event);
+    // console.log('View timezone:', viewTimezone);
     const eventLogs = event.updateLogs;
     
     const start = formatDateTime(event.startUTC, event.timezone, viewTimezone);
     const end = formatDateTime(event.endUTC, event.timezone, viewTimezone);
     
-    console.log('Formatted start:', start);
-    console.log('Formatted end:', end);
-    console.log('Event timezone:', event.timezone);
+    // console.log('Formatted start:', start);
+    // console.log('Formatted end:', end);
+    // console.log('Event timezone:', event.timezone);
 
     const participantNames = (event.profiles || [])
         .map((id) => getUsernameById(id, profiles))

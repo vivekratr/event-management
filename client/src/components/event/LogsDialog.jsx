@@ -4,12 +4,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { getUsernameById } from '@/utils/userUtils';
+import { formatDateTime } from '@/utils/timezoneUtils';
+import { useStore } from '@/hooks/useStore';
 
 export default function LogsDialog({ logs = [], children, profiles = [] }) {
+      const {
+          
+           
+            viewTimezone,
+           
+        } = useStore();
     const renderProfileArray = (value, profiles) => {
-        console.log('====================================');
-        console.log("render profile", value, "profile", profiles);
-        console.log('====================================');
+      
         if (!Array.isArray(value)) return JSON.stringify(value);
         return value.map(id => getUsernameById(id, profiles) || id).join(', ');
     };
@@ -31,6 +37,21 @@ export default function LogsDialog({ logs = [], children, profiles = [] }) {
                 </div>
             );
         }
+            else if (change.field === 'startDateTime' || change.field === 'endDateTime') {
+                const start = formatDateTime(change.oldValue, 'UTC', viewTimezone);
+                const end = formatDateTime(change.newValue, 'UTC', viewTimezone);
+                return (
+                    <div className="text-sm">
+                        <span className="font-medium">{change.field}:</span>
+                        <div className="ml-2 mt-1">
+                            <div className="font-medium">Old:</div>
+                            <div className="ml-2">{start}</div>
+                            <div className="font-medium mt-1">New:</div>
+                            <div className="ml-2">{end}</div>
+                        </div>
+                    </div>
+                );
+            }
 
         return (
             <div  className="text-sm">
