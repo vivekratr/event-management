@@ -1,5 +1,5 @@
 'use client';
-import EventManagementDashboard from '@/components/events/Dashboard';
+import Dashboard from '@/components/page/Dashboard';
 import ToasterProvider from '@/providers/ToasterProvider';
 
 export default function Home() {

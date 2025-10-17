@@ -8,16 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 import { useStore } from '@/hooks/useStore';
 import { TIMEZONES } from '@/lib/constants';
 import { formatDateTime } from '@/utils/timezoneUtils';
-import { validateEventForm } from '@/utils/validationUtils';
+import { valiDate} from '@/utils/validation';
 import { getUsernameById } from '@/utils/userUtils';
 import DateTimeInput from '@/components/common/DateTimeInput';
-import ProfileMultiSelect from './ProfileMultiSelect';
-import EventCard from './EventCard';
+import ProfileMultiSelect from '@/components/event/ProfileMultiSelect';
+import EventCard from '@/components/event/EventCard';
 
 export default function EventDashboard() {
     const {
@@ -83,7 +83,7 @@ export default function EventDashboard() {
             createdBy: currentUser,
         };
 
-        const validationError = validateEventForm(eventForm);
+        const validationError = valiDatee(eventForm);
         if (validationError) {
             setFormError(validationError);
             return;
@@ -116,7 +116,7 @@ export default function EventDashboard() {
             requesterId: currentUser,
         };
 
-        const validationError = validateEventForm(eventForm);
+        const validationError = valiDate(eventForm);
         if (validationError) {
             setFormError(validationError);
             return;
