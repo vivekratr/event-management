@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Edit, FileText, Plus, User } from 'lucide-react';
+import { Calendar, Clock, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-
 import { useStore } from '@/hooks/useStore';
 import { TIMEZONES } from '@/lib/constants';
-import { formatDateTime } from '@/utils/timezoneUtils';
 import { valiDate } from '@/utils/validation';
-import { getUsernameById } from '@/utils/userUtils';
 import DateTimeInput from '@/components/common/DateTimeInput';
 import ProfileMultiSelect from '@/components/event/ProfileMultiSelect';
 import EventCard from '@/components/event/EventCard';
@@ -41,7 +38,6 @@ export default function EventDashboard() {
     const [showCreateEvent, setShowCreateEvent] = useState(false);
     const [showEditEvent, setShowEditEvent] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
-
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [newProfileName, setNewProfileName] = useState('');
 
@@ -64,7 +60,6 @@ export default function EventDashboard() {
     });
 
     const [formError, setFormError] = useState('');
-    const [eventLogs, setEventLogs] = useState([]);
 
     useEffect(() => {
         fetchProfiles();
