@@ -2,13 +2,15 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Edit2, Users } from 'lucide-react';
+import { Calendar, Clock, Edit2, Users, History } from 'lucide-react';
 import { formatDateTime } from '@/utils/timezoneUtils';
 import { getUsernameById } from '@/utils/userUtils';
+import LogsDialog from './LogsDialog';
 
 export default function EventCard({ event, profiles, viewTimezone, onEdit }) {
     console.log('Event data:', event);
     console.log('View timezone:', viewTimezone);
+    const eventLogs = event.updateLogs;
     
     const start = formatDateTime(event.startUTC, event.timezone, viewTimezone);
     const end = formatDateTime(event.endUTC, event.timezone, viewTimezone);
@@ -67,6 +69,14 @@ export default function EventCard({ event, profiles, viewTimezone, onEdit }) {
                             <strong>End:</strong> {end}
                         </span>
                     </div>
+                </div>
+                <div className="mt-4 flex justify-between items-center border-t pt-3">
+                    <LogsDialog logs={eventLogs} profiles={profiles}>
+                        <Button variant="outline" size="sm" className="text-xs">
+                            <History className="h-3 w-3 mr-1" />
+                            Show Logs
+                        </Button>
+                    </LogsDialog>
                 </div>
             </CardContent>
         </Card>

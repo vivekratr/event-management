@@ -45,7 +45,6 @@ export default function EventDashboard() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [newProfileName, setNewProfileName] = useState('');
 
-    // Form state for creating new events
     const [createEventForm, setCreateEventForm] = useState({
         profiles: [],
         timezone: 'America/New_York',
@@ -55,7 +54,6 @@ export default function EventDashboard() {
         endTime: '10:00',
     });
 
-    // Form state for editing existing events
     const [editEventForm, setEditEventForm] = useState({
         profiles: [],
         timezone: 'America/New_York',
@@ -68,13 +66,13 @@ export default function EventDashboard() {
     const [formError, setFormError] = useState('');
     const [eventLogs, setEventLogs] = useState([]);
 
-    // Fetch initial data
     useEffect(() => {
         fetchProfiles();
     }, []);
 
     useEffect(() => {
         if (currentUser) fetchEvents(currentUser);
+       
     }, [currentUser]);
 
     const handleCreateProfile = async () => {
@@ -90,14 +88,12 @@ export default function EventDashboard() {
     };
 
     const handleCreateEvent = async () => {
-        // Validate form first
         const validationError = valiDate(createEventForm);
         if (validationError) {
             setFormError(validationError);
             return;
         }
 
-        // Create date strings in ISO format with timezone
         const createISODate = (dateStr, timeStr) => {
             const [year, month, day] = dateStr.split('-').map(Number);
             const [hours, minutes] = timeStr.split(':').map(Number);
@@ -129,6 +125,7 @@ export default function EventDashboard() {
             setShowCreateEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
+            toast('Unauthorized Action',"Only Admin can create users")
             setFormError(error.message || 'Failed to create event');
         }
     };
@@ -136,14 +133,12 @@ export default function EventDashboard() {
     const handleUpdateEvent = async () => {
         if (!selectedEvent) return;
 
-        // Validate form first
         const validationError = valiDate(editEventForm);
         if (validationError) {
             setFormError(validationError);
             return;
         }
 
-        // Create date strings in ISO format with timezone
         const createISODate = (dateStr, timeStr) => {
             const [year, month, day] = dateStr.split('-').map(Number);
             const [hours, minutes] = timeStr.split(':').map(Number);
@@ -266,7 +261,7 @@ export default function EventDashboard() {
                                 profiles={profiles}
                             />
 
-                            <Dialog open={showCreateProfile} onOpenChange={setShowCreateProfile}>
+                            {profiles.find((obj)=>obj.role === 'admin')._id === currentUser &&  <Dialog open={showCreateProfile} onOpenChange={setShowCreateProfile}>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" size="sm" className="w-full">
                                         <Plus className="mr-2 h-4 w-4" /> New Profile
@@ -288,7 +283,7 @@ export default function EventDashboard() {
                                         </Button>
                                     </div>
                                 </DialogContent>
-                            </Dialog>
+                            </Dialog>}
 
                             <div>
                                 <Label>Timezone</Label>
@@ -387,8 +382,8 @@ export default function EventDashboard() {
                     </Card>
                 </div>
 
-                {/* Create Event Dialog */}
-                <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
+                {/* Create Event dialog */}
+                <Dialog  open={showCreateEvent} onOpenChange={setShowCreateEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Event</DialogTitle>
@@ -410,7 +405,7 @@ export default function EventDashboard() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Edit Event Dialog */}
+                {/* Edit evebt dialog */}
                 <Dialog open={showEditEvent} onOpenChange={setShowEditEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
