@@ -139,20 +139,47 @@ export default function EventDashboard() {
             return;
         }
 
+        const payload = {
+            requesterId: currentUser,
+        };
+
+        // Only include profiles if changed
+        const originalProfiles = selectedEvent.profiles || [];
+        if (JSON.stringify(editEventForm.profiles) !== JSON.stringify(originalProfiles)) {
+            payload.profiles = editEventForm.profiles;
+        }
+
+        // Only include timezone if changed
+        if (editEventForm.timezone !== selectedEvent.timezone) {
+            payload.timezone = editEventForm.timezone;
+        }
+
+        // Only include dates if they've changed
         const createISODate = (dateStr, timeStr) => {
             const [year, month, day] = dateStr.split('-').map(Number);
             const [hours, minutes] = timeStr.split(':').map(Number);
-            const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
-            return date.toISOString();
+            return new Date(Date.UTC(year, month - 1, day, hours, minutes)).toISOString();
         };
 
-        const payload = {
-            requesterId:currentUser,
-            profiles: editEventForm.profiles,
-            timezone: editEventForm.timezone,
-            start: createISODate(editEventForm.startDate, editEventForm.startTime),
-            end: createISODate(editEventForm.endDate, editEventForm.endTime),
-        };
+        const originalStart = selectedEvent.startUTC ? new Date(selectedEvent.startUTC) : null;
+        const originalEnd = selectedEvent.endUTC ? new Date(selectedEvent.endUTC) : null;
+
+        const newStart = editEventForm.startDate && editEventForm.startTime ?
+            new Date(createISODate(editEventForm.startDate, editEventForm.startTime)) : null;
+        const newEnd = editEventForm.endDate && editEventForm.endTime ?
+            new Date(createISODate(editEventForm.endDate, editEventForm.endTime)) : null;
+
+        if (newStart && (!originalStart || newStart.getTime() !== originalStart.getTime())) {
+            payload.start = newStart.toISOString();
+        }
+        if (newEnd && (!originalEnd || newEnd.getTime() !== originalEnd.getTime())) {
+            payload.end = newEnd.toISOString();
+        }
+
+        if (Object.keys(payload).length <= 1) { 
+            toast.info('No changes detected');
+            return;
+        }
 
         console.log('Updating event with payload:', payload);
 
@@ -162,33 +189,19 @@ export default function EventDashboard() {
             setShowEditEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
-            console.log('====================================');
-            console.log(error);
-            console.log('====================================');
+            console.error('Error updating event:', error);
             setFormError(error.message || 'Failed to update event');
         }
     };
-
-    const openCreateEventDialog = () => {
-        setCreateEventForm({
-            profiles: [],
-            timezone: 'America/New_York',
-            startDate: '',
-            startTime: '09:00',
-            endDate: '',
-            endTime: '10:00',
-        });
-        setFormError('');
-        setShowCreateEvent(true);
-    };
+   
 
     const openEditDialog = (event) => {
         try {
             const parseDate = (dateString) => {
-                if (!dateString) return new Date();
+                if (!dateString) return null;
                 const normalized = dateString.replace(' ', 'T');
                 const date = new Date(normalized);
-                if (isNaN(date.getTime())) throw new Error('Invalid date format');
+                if (isNaN(date.getTime())) return null;
                 return date;
             };
 
@@ -196,8 +209,12 @@ export default function EventDashboard() {
             const endDate = parseDate(event.endUTC);
 
             const pad = (num) => num.toString().padStart(2, '0');
-            const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-            const formatTime = (date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+            const formatDate = (date) =>
+                date ? `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}` : '';
+
+            const formatTime = (date) =>
+                date ? `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}` : '';
 
             setSelectedEvent(event);
             setEditEventForm({
@@ -216,6 +233,7 @@ export default function EventDashboard() {
             toast.error('Error loading event data. Please try again.');
         }
     };
+    
       
 
     const userEvents = events.filter((e) => e.profiles?.includes(currentUser));
@@ -327,7 +345,7 @@ export default function EventDashboard() {
                             )}
 
                             <Button 
-                                onClick={openCreateEventDialog} 
+                                onClick={handleCreateEvent} 
                                 className="w-full"
                             >
                                 <Plus className="mr-2 h-4 w-4" /> Create New Event
@@ -367,10 +385,10 @@ export default function EventDashboard() {
                                 </div>
                             ) : (
                                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                                    {userEvents.map((event) => (
+                                    {userEvents.map((event1) => (
                                         <EventCard
-                                            key={event._id}
-                                            event={event}
+                                            key={event1._id}
+                                            event={event1}
                                             profiles={profiles}
                                             viewTimezone={viewTimezone}
                                             onEdit={openEditDialog}
@@ -383,7 +401,7 @@ export default function EventDashboard() {
                 </div>
 
                 {/* Create Event dialog */}
-                <Dialog  open={showCreateEvent} onOpenChange={setShowCreateEvent}>
+                {/* <Dialog  open={showCreateEvent} onOpenChange={setShowCreateEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Event</DialogTitle>
@@ -403,7 +421,7 @@ export default function EventDashboard() {
                             </Button>
                         </div>
                     </DialogContent>
-                </Dialog>
+                </Dialog> */}
 
                 {/* Edit evebt dialog */}
                 <Dialog open={showEditEvent} onOpenChange={setShowEditEvent}>
