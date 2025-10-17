@@ -90,19 +90,30 @@ export default function EventDashboard() {
     };
 
     const handleCreateEvent = async () => {
-        const payload = {
-            profiles: createEventForm.profiles,
-            timezone: createEventForm.timezone,
-            start: `${createEventForm.startDate}T${createEventForm.startTime}:00`,
-            end: `${createEventForm.endDate}T${createEventForm.endTime}:00`,
-            createdBy: currentUser,
-        };
-
+        // Validate form first
         const validationError = valiDate(createEventForm);
         if (validationError) {
             setFormError(validationError);
             return;
         }
+
+        // Create date strings in ISO format with timezone
+        const createISODate = (dateStr, timeStr) => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+            return date.toISOString();
+        };
+
+        const payload = {
+            profiles: createEventForm.profiles,
+            timezone: createEventForm.timezone,
+            start: createISODate(createEventForm.startDate, createEventForm.startTime),
+            end: createISODate(createEventForm.endDate, createEventForm.endTime),
+            createdBy: currentUser,
+        };
+
+        console.log('Creating event with payload:', payload);
 
         try {
             await createEvent(payload);
@@ -125,18 +136,29 @@ export default function EventDashboard() {
     const handleUpdateEvent = async () => {
         if (!selectedEvent) return;
 
-        const payload = {
-            profiles: editEventForm.profiles,
-            timezone: editEventForm.timezone,
-            start: `${editEventForm.startDate}T${editEventForm.startTime}:00`,
-            end: `${editEventForm.endDate}T${editEventForm.endTime}:00`,
-        };
-
+        // Validate form first
         const validationError = valiDate(editEventForm);
         if (validationError) {
             setFormError(validationError);
             return;
         }
+
+        // Create date strings in ISO format with timezone
+        const createISODate = (dateStr, timeStr) => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+            return date.toISOString();
+        };
+
+        const payload = {
+            profiles: editEventForm.profiles,
+            timezone: editEventForm.timezone,
+            start: createISODate(editEventForm.startDate, editEventForm.startTime),
+            end: createISODate(editEventForm.endDate, editEventForm.endTime),
+        };
+
+        console.log('Updating event with payload:', payload);
 
         try {
             await updateEvent(selectedEvent._id, payload);
