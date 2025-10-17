@@ -43,7 +43,7 @@ export default function EventCard({ event, profiles, viewTimezone, onEdit }) {
                     <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
                         <span>
-                            <strong>Timezone:</strong> {viewTimezone}
+                            <strong>Timezone:</strong> {event.timezone}
                         </span>
                     </div>
 

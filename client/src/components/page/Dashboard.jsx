@@ -18,6 +18,7 @@ import { getUsernameById } from '@/utils/userUtils';
 import DateTimeInput from '@/components/common/DateTimeInput';
 import ProfileMultiSelect from '@/components/event/ProfileMultiSelect';
 import EventCard from '@/components/event/EventCard';
+import EventForm from '@/components/event/EventForm';
 
 export default function EventDashboard() {
     const {
@@ -37,19 +38,33 @@ export default function EventDashboard() {
     } = useStore();
 
     const [showCreateProfile, setShowCreateProfile] = useState(false);
+    const [showCreateEvent, setShowCreateEvent] = useState(false);
     const [showEditEvent, setShowEditEvent] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
 
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [newProfileName, setNewProfileName] = useState('');
-    const [eventForm, setEventForm] = useState({
+
+    // Form state for creating new events
+    const [createEventForm, setCreateEventForm] = useState({
         profiles: [],
         timezone: 'America/New_York',
         startDate: '',
         startTime: '09:00',
         endDate: '',
-        endTime: '09:00',
+        endTime: '10:00',
     });
+
+    // Form state for editing existing events
+    const [editEventForm, setEditEventForm] = useState({
+        profiles: [],
+        timezone: 'America/New_York',
+        startDate: '',
+        startTime: '09:00',
+        endDate: '',
+        endTime: '10:00',
+    });
+
     const [formError, setFormError] = useState('');
     const [eventLogs, setEventLogs] = useState([]);
 
@@ -76,14 +91,14 @@ export default function EventDashboard() {
 
     const handleCreateEvent = async () => {
         const payload = {
-            profiles: eventForm.profiles,
-            timezone: eventForm.timezone,
-            start: `${eventForm.startDate}T${eventForm.startTime}:00`,
-            end: `${eventForm.endDate}T${eventForm.endTime}:00`,
+            profiles: createEventForm.profiles,
+            timezone: createEventForm.timezone,
+            start: `${createEventForm.startDate}T${createEventForm.startTime}:00`,
+            end: `${createEventForm.endDate}T${createEventForm.endTime}:00`,
             createdBy: currentUser,
         };
 
-        const validationError = valiDate(eventForm);
+        const validationError = valiDate(createEventForm);
         if (validationError) {
             setFormError(validationError);
             return;
@@ -92,14 +107,15 @@ export default function EventDashboard() {
         try {
             await createEvent(payload);
             toast.success('Your event has been added successfully.');
-            setEventForm({
+            setCreateEventForm({
                 profiles: [],
                 timezone: 'America/New_York',
                 startDate: '',
                 startTime: '09:00',
                 endDate: '',
-                endTime: '09:00',
+                endTime: '10:00',
             });
+            setShowCreateEvent(false);
             fetchEvents(currentUser);
         } catch (error) {
             setFormError(error.message || 'Failed to create event');
@@ -108,15 +124,15 @@ export default function EventDashboard() {
 
     const handleUpdateEvent = async () => {
         if (!selectedEvent) return;
+
         const payload = {
-            profiles: eventForm.profiles,
-            timezone: eventForm.timezone,
-            start: `${eventForm.startDate}T${eventForm.startTime}:00`,
-            end: `${eventForm.endDate}T${eventForm.endTime}:00`,
-            requesterId: currentUser,
+            profiles: editEventForm.profiles,
+            timezone: editEventForm.timezone,
+            start: `${editEventForm.startDate}T${editEventForm.startTime}:00`,
+            end: `${editEventForm.endDate}T${editEventForm.endTime}:00`,
         };
 
-        const validationError = valiDate(eventForm);
+        const validationError = valiDate(editEventForm);
         if (validationError) {
             setFormError(validationError);
             return;
@@ -132,6 +148,19 @@ export default function EventDashboard() {
         }
     };
 
+    const openCreateEventDialog = () => {
+        setCreateEventForm({
+            profiles: [],
+            timezone: 'America/New_York',
+            startDate: '',
+            startTime: '09:00',
+            endDate: '',
+            endTime: '10:00',
+        });
+        setFormError('');
+        setShowCreateEvent(true);
+    };
+
     const openEditDialog = (event) => {
         try {
             const parseDate = (dateString) => {
@@ -144,7 +173,7 @@ export default function EventDashboard() {
 
             const startDate = event.start ? parseDate(event.start) : new Date();
             const endDate = event.end ? parseDate(event.end) : new Date();
-            
+
             const formatDate = (date) => {
                 const pad = (num) => num.toString().padStart(2, '0');
                 return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -156,7 +185,7 @@ export default function EventDashboard() {
             };
 
             setSelectedEvent(event);
-            setEventForm({
+            setEditEventForm({
                 profiles: event.profiles || [],
                 timezone: event.timezone || 'America/New_York',
                 startDate: formatDate(startDate),
@@ -210,8 +239,8 @@ export default function EventDashboard() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <ProfileMultiSelect
-                                selectedIds={eventForm.profiles}
-                                onChange={(ids) => setEventForm({ ...eventForm, profiles: ids })}
+                                selectedIds={createEventForm.profiles}
+                                onChange={(ids) => setCreateEventForm({ ...createEventForm, profiles: ids })}
                                 profiles={profiles}
                             />
 
@@ -242,8 +271,8 @@ export default function EventDashboard() {
                             <div>
                                 <Label>Timezone</Label>
                                 <Select
-                                    value={eventForm.timezone}
-                                    onValueChange={(v) => setEventForm({ ...eventForm, timezone: v })}
+                                    value={createEventForm.timezone}
+                                    onValueChange={(v) => setCreateEventForm({ ...createEventForm, timezone: v })}
                                 >
                                     <SelectTrigger className="mt-2">
                                         <SelectValue />
@@ -260,18 +289,18 @@ export default function EventDashboard() {
 
                             <DateTimeInput
                                 label="Start Date & Time"
-                                dateValue={eventForm.startDate}
-                                timeValue={eventForm.startTime}
-                                onDateChange={(d) => setEventForm({ ...eventForm, startDate: d })}
-                                onTimeChange={(t) => setEventForm({ ...eventForm, startTime: t })}
+                                dateValue={createEventForm.startDate}
+                                timeValue={createEventForm.startTime}
+                                onDateChange={(d) => setCreateEventForm({ ...createEventForm, startDate: d })}
+                                onTimeChange={(t) => setCreateEventForm({ ...createEventForm, startTime: t })}
                             />
 
                             <DateTimeInput
                                 label="End Date & Time"
-                                dateValue={eventForm.endDate}
-                                timeValue={eventForm.endTime}
-                                onDateChange={(d) => setEventForm({ ...eventForm, endDate: d })}
-                                onTimeChange={(t) => setEventForm({ ...eventForm, endTime: t })}
+                                dateValue={createEventForm.endDate}
+                                timeValue={createEventForm.endTime}
+                                onDateChange={(d) => setCreateEventForm({ ...createEventForm, endDate: d })}
+                                onTimeChange={(t) => setCreateEventForm({ ...createEventForm, endTime: t })}
                             />
 
                             {formError && (
@@ -280,8 +309,11 @@ export default function EventDashboard() {
                                 </Alert>
                             )}
 
-                            <Button onClick={handleCreateEvent} disabled={loading} className="w-full">
-                                <Plus className="mr-2 h-4 w-4" /> {loading ? 'Creating...' : 'Create Event'}
+                            <Button 
+                                onClick={openCreateEventDialog} 
+                                className="w-full"
+                            >
+                                <Plus className="mr-2 h-4 w-4" /> Create New Event
                             </Button>
                         </CardContent>
                     </Card>
@@ -333,58 +365,47 @@ export default function EventDashboard() {
                     </Card>
                 </div>
 
+                {/* Create Event Dialog */}
+                <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
+                    <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Create New Event</DialogTitle>
+                        </DialogHeader>
+                        <EventForm 
+                            formData={createEventForm}
+                            setFormData={setCreateEventForm}
+                            profiles={profiles}
+                            formError={formError}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setShowCreateEvent(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreateEvent} disabled={loading}>
+                                {loading ? 'Creating...' : 'Create Event'}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Edit Event Dialog */}
                 <Dialog open={showEditEvent} onOpenChange={setShowEditEvent}>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Edit Event</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4 pt-4">
-                            <ProfileMultiSelect
-                                selectedIds={eventForm.profiles}
-                                onChange={(ids) => setEventForm({ ...eventForm, profiles: ids })}
-                                profiles={profiles}
-                            />
-                            <Label>Timezone</Label>
-                            <Select
-                                value={eventForm.timezone}
-                                onValueChange={(v) => setEventForm({ ...eventForm, timezone: v })}
-                            >
-                                <SelectTrigger className="mt-2">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {TIMEZONES.map((tz) => (
-                                        <SelectItem key={tz.value} value={tz.value}>
-                                            {tz.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <DateTimeInput
-                                label="Start Date & Time"
-                                dateValue={eventForm.startDate}
-                                timeValue={eventForm.startTime}
-                                onDateChange={(d) => setEventForm({ ...eventForm, startDate: d })}
-                                onTimeChange={(t) => setEventForm({ ...eventForm, startTime: t })}
-                            />
-
-                            <DateTimeInput
-                                label="End Date & Time"
-                                dateValue={eventForm.endDate}
-                                timeValue={eventForm.endTime}
-                                onDateChange={(d) => setEventForm({ ...eventForm, endDate: d })}
-                                onTimeChange={(t) => setEventForm({ ...eventForm, endTime: t })}
-                            />
-
-                            {formError && (
-                                <Alert variant="destructive">
-                                    <AlertDescription>{formError}</AlertDescription>
-                                </Alert>
-                            )}
-
-                            <Button onClick={handleUpdateEvent} disabled={loading} className="w-full">
-                                {loading ? 'Updating...' : 'Update Event'}
+                        <EventForm 
+                            formData={editEventForm}
+                            setFormData={setEditEventForm}
+                            profiles={profiles}
+                            formError={formError}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setShowEditEvent(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleUpdateEvent} disabled={loading}>
+                                {loading ? 'Updating...' : 'Save Changes'}
                             </Button>
                         </div>
                     </DialogContent>
