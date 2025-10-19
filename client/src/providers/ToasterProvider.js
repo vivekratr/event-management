@@ -1,4 +1,3 @@
-// src/providers/ToasterProvider.jsx
 'use client';
 import React from 'react';
 import { Toaster } from 'sonner';

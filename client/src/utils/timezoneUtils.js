@@ -13,7 +13,6 @@ export const formatDateTime = (dateStr, sourceTz, targetTz) => {
     }
     
     try {
-        // Create date object from the ISO string (which is in UTC)
         const date = new Date(dateStr);
         
         if (isNaN(date.getTime())) {
@@ -21,7 +20,6 @@ export const formatDateTime = (dateStr, sourceTz, targetTz) => {
             return 'Invalid date';
         }
         
-        // Use target timezone if provided, otherwise use source timezone
         const timeZone = targetTz || sourceTz || 'UTC';
         
         console.log('Date object created:', {
@@ -31,7 +29,6 @@ export const formatDateTime = (dateStr, sourceTz, targetTz) => {
             timeZone
         });
         
-        // Format options
         const options = {
             year: 'numeric',
             month: 'short',
@@ -43,7 +40,6 @@ export const formatDateTime = (dateStr, sourceTz, targetTz) => {
             timeZoneName: 'short'
         };
         
-        // Format the date
         const formatter = new Intl.DateTimeFormat('en-US', options);
         const formatted = formatter.format(date);
         

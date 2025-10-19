@@ -1,10 +1,8 @@
 export const valiDate = (form) => {
-    // Check if required fields are present
     if (!form.startDate || !form.startTime || !form.endDate || !form.endTime) {
         return 'Please fill in all date and time fields';
     }
 
-    // Create date objects with proper timezone handling
     const createDate = (dateStr, timeStr) => {
         const [year, month, day] = dateStr.split('-').map(Number);
         const [hours, minutes] = timeStr.split(':').map(Number);
