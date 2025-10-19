@@ -5,10 +5,7 @@ import { toUTC } from "../utils/timezone.js";
 
 const router = express.Router();
 
-/*
- POST /api/events
- Create a new event (by any existing profile)
- */
+
 // tested
 router.post("/", async (req, res) => {
     try {
@@ -37,11 +34,7 @@ router.post("/", async (req, res) => {
     }
 });
  
-/**
- * GET /api/events?profile=<profileId>
- * Fetch only events assigned to the given profile
- * tested successfully
- */
+// tested successfully
 router.get("/", async (req, res) => {
     try {
         const { profile } = req.query;
@@ -54,11 +47,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-/**
- * PATCH /api/events/:id
- * Update an event only if the requester is assigned to it
- * tested successfully
- */
+// tested successfully
 router.patch("/:id", async (req, res) => {
     try {
         const { requesterId, start, end, timezone, profiles } = req.body;
@@ -69,18 +58,14 @@ router.patch("/:id", async (req, res) => {
         const event = await Event.findById(req.params.id);
         if (!event) return res.status(404).json({ error: "Event not found" });
 
-        // Check if requester is assigned to this event
         const isAssigned = event.profiles.map(String).includes(requesterId);
         if (!isAssigned) return res.status(403).json({ error: "Access denied: not part of this event" });
-        // Track changes
         const changes = {};
         const timezoneToUse = timezone || event.timezone;
 
-        // Handle time updates separately
         let startUTC = event.startUTC;
         let endUTC = event.endUTC;
 
-        // Update start time only
         if (start && !end) {
             startUTC = toUTC(start, timezoneToUse);
             if (startUTC >= event.endUTC) {
@@ -90,7 +75,6 @@ router.patch("/:id", async (req, res) => {
             event.startUTC = startUTC;
         }
 
-        // Update end time only
         if (end && !start) {
             endUTC = toUTC(end, timezoneToUse);
             if (endUTC <= event.startUTC) {
@@ -100,7 +84,6 @@ router.patch("/:id", async (req, res) => {
             event.endUTC = endUTC;
         }
 
-        // Update both start and end times
         if (start && end) {
             startUTC = toUTC(start, timezoneToUse);
             endUTC = toUTC(end, timezoneToUse);
@@ -113,7 +96,6 @@ router.patch("/:id", async (req, res) => {
             event.endUTC = endUTC;
         }
 
-        // Update other fields
         if (timezone && timezone !== event.timezone) {
             changes.timezone = { oldValue: event.timezone, newValue: timezone };
             event.timezone = timezone;
@@ -124,9 +106,7 @@ router.patch("/:id", async (req, res) => {
             event.profiles = profiles;
         }
 
-        // Only save and log if there are changes
         if (Object.keys(changes).length > 0) {
-            // Log the changes
             event.updateLogs.push({
                 timestamp: new Date(),
                 timezone: timezoneToUse,
@@ -138,10 +118,8 @@ router.patch("/:id", async (req, res) => {
                 }))
             });
 
-            // Update the updatedAt timestamp
             event.updatedAt = new Date();
 
-            // Save the updated event
             await event.save();
         }
 
@@ -151,10 +129,7 @@ router.patch("/:id", async (req, res) => {
     }
 });
 
-/**
- * GET /api/events/:id/logs
- * Get update logs for a specific event
- */
+// Get update logs for a specific event
 router.get("/:id/logs", async (req, res) => {
     try {
         const { id } = req.params;
@@ -164,7 +139,6 @@ router.get("/:id/logs", async (req, res) => {
             return res.status(404).json({ error: "Event not found" });
         }
 
-        // Format the logs for better readability
         const formattedLogs = event.updateLogs ? event.updateLogs.map(log => ({
             timestamp: log.timestamp,
             timezone: log.timezone,
