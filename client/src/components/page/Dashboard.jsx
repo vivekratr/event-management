@@ -49,9 +49,9 @@ export default function EventDashboard() {
         profiles: [],
         timezone: 'America/New_York',
         startDate: '',
-        startTime: '09:00',
+        startTime: '21:00',
         endDate: '',
-        endTime: '10:00',
+        endTime: '22:00',
     });
 
     const [editEventForm, setEditEventForm] = useState({

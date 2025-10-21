@@ -22,7 +22,7 @@ export const valiDate = (form) => {
         if (end <= start) return 'End time must be after start time';
         if (!form.profiles?.length) return 'Select at least one participant';
         
-        return ''; // No errors
+        return '';
     } catch (error) {
         console.error('Error validating dates:', error);
         return 'Error validating dates';
